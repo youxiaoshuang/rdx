@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Kindle 时钟</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#000000',
+secondary: '#4A4A4A'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<style>
+@font-face {
+font-family: 'Roboto Mono';
+font-style: normal;
+font-weight: 400;
+src: url(https://fonts.gstatic.com/s/robotomono/v22/L0xuDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vq_ROW4.woff2) format('woff2');
+}
+
+@media (orientation: landscape) {
+body {
+padding: 0 2rem;
+}
+}
+</style>
+</head>
+<body class="bg-white min-h-screen flex flex-col items-center justify-center text-primary">
+<div class="text-center landscape:flex landscape:items-center landscape:gap-12">
+<div id="time" class="font-['Roboto_Mono'] text-8xl mb-8 landscape:mb-0 landscape:text-9xl"></div>
+<div class="landscape:text-left">
+<div id="date" class="text-3xl mb-4"></div>
+<div id="lunar" class="text-2xl text-secondary mb-4 min-h-[2em] flex items-center justify-center landscape:justify-start"></div>
+<div class="flex items-center justify-center gap-2 text-2xl landscape:justify-start">
+<i class="ri-sun-line w-8 h-8 flex items-center justify-center"></i>
+<span id="temperature" class="font-['Roboto_Mono']">25°C</span>
+<span class="mx-2">|</span>
+<span id="weather">晴</span>
+<span class="mx-2">|</span>
+<span id="location">上海</span>
+</div>
+</div>
+</div>
+<style>
+:where([class^="ri-"])::before {
+content: "\f3c2";
+}
+</style>
+<script>
+const lunarInfo = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2];
+const Gan = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+const Zhi = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const Animals = ["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+const lunarMonth = ["正","二","三","四","五","六","七","八","九","十","冬","腊"];
+const lunarDay = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",
+"十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
+"廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
+const weekDay = ["日","一","二","三","四","五","六"];
+function getLunarDate(date) {
+const year = date.getFullYear();
+const month = date.getMonth() + 1;
+const day = date.getDate();
+// 模拟农历数据
+const mockLunarData = {
+year: "乙卯",
+month: "二",
+day: "初一",
+festival: "元宵节"
+};
+let result = `农历${mockLunarData.month}月${mockLunarData.day}`;
+if(mockLunarData.festival) {
+result += ` · ${mockLunarData.festival}`;
+}
+return result;
+}
+async function getWeather() {
+try {
+const mockWeatherData = {
+current: {
+temp_c: 18,
+condition: {
+text: "多云"
+}
+},
+location: {
+name: "上海市杨浦区"
+}
+};
+document.getElementById('temperature').textContent = `${Math.round(mockWeatherData.current.temp_c)}°C`;
+document.getElementById('weather').textContent = mockWeatherData.current.condition.text;
+document.getElementById('location').textContent = mockWeatherData.location.name;
+const weatherIcon = document.querySelector('.ri-sun-line');
+if(mockWeatherData.current.condition.text.includes('云')) {
+weatherIcon.className = 'ri-cloud-line w-8 h-8 flex items-center justify-center';
+} else if(mockWeatherData.current.condition.text.includes('雨')) {
+weatherIcon.className = 'ri-rainy-line w-8 h-8 flex items-center justify-center';
+} else if(mockWeatherData.current.condition.text.includes('雪')) {
+weatherIcon.className = 'ri-snowy-line w-8 h-8 flex items-center justify-center';
+} else if(mockWeatherData.current.condition.text.includes('雾')) {
+weatherIcon.className = 'ri-mist-line w-8 h-8 flex items-center justify-center';
+} else if(mockWeatherData.current.condition.text.includes('阴')) {
+weatherIcon.className = 'ri-cloudy-line w-8 h-8 flex items-center justify-center';
+}
+} catch (error) {
+console.error('获取天气信息失败:', error);
+}
+}
+function getDayPeriod(hour) {
+if (hour >= 5 && hour < 12) return '上午';
+if (hour >= 12 && hour < 17) return '下午';
+if (hour >= 17 && hour < 19) return '傍晚';
+return '夜晚';
+}
+function updateTime() {
+const now = new Date();
+const timeStr = now.toLocaleTimeString('zh-CN', {
+hour12: false,
+hour: '2-digit',
+minute: '2-digit',
+second: '2-digit'
+});
+const dateStr = now.toLocaleDateString('zh-CN', {
+year: 'numeric',
+month: 'long',
+day: 'numeric',
+weekday: 'long'
+});
+const lunarDateStr = getLunarDate(now);
+const dayPeriod = getDayPeriod(now.getHours());
+document.getElementById('time').textContent = timeStr;
+document.getElementById('date').textContent = `${dayPeriod} · ${dateStr}`;
+document.getElementById('lunar').textContent = lunarDateStr;
+}
+getWeather();
+setInterval(getWeather, 1800000); // 每30分钟更新一次天气
+updateTime();
+setInterval(updateTime, 1000);
+</script>
+</body>
+</html>
